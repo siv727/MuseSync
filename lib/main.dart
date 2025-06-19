@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'pages/player_page.dart';
+import 'pages/search_page.dart';
+import 'pages/recent_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -45,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     switch (selectedIndex) {
       case 0:
-        page = MusicPlayerPage();
+        page = RecentPage();
       case 1:
         page = SearchPage();
       default:
@@ -73,8 +76,8 @@ class _MyHomePageState extends State<MyHomePage> {
               items: [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite),
-                  label: 'Favorites',
+                  icon: Icon(Icons.search),
+                  label: 'Search',
                 ),
               ],
               currentIndex: selectedIndex,
@@ -88,19 +91,5 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
     );
-  }
-}
-
-class SearchPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('This is Search Page'));
-  }
-}
-
-class MusicPlayerPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('This is Music Player Page'));
   }
 }
