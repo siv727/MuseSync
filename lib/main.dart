@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'pages/player_page.dart';
 import 'pages/search_page.dart';
 import 'pages/recent_page.dart';
+import 'package:soundcloud_explode_dart/soundcloud_explode_dart.dart';
+import 'package:just_audio/just_audio.dart';
 
 void main() {
   runApp(MyApp());
@@ -32,7 +34,80 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppState extends ChangeNotifier {}
+class MyAppState extends ChangeNotifier {
+  final SoundcloudClient client = SoundcloudClient();
+  final AudioPlayer player = AudioPlayer();
+  final List<String> songs = [
+    'https://soundcloud.com/no-no-376380923/persona-3-reload-dont-by-azumi',
+    'https://soundcloud.com/tribaltrapmusic/tucadonka',
+    'https://soundcloud.com/ersona4ancingllight/dance',
+    'https://soundcloud.com/jamieirl/machine-love',
+    'https://soundcloud.com/duranduran/invisible',
+  ];
+  bool isInitialized = false;
+  bool isPlaying = false;
+  int songNum = 0;
+  String currentTitle = '';
+  Uri? currentAlbum;
+
+  MyAppState() {
+    player.playerStateStream.listen((state) {
+      final playing = state.playing;
+      if (playing != isPlaying) {
+        isPlaying = playing;
+        notifyListeners();
+      }
+    });
+  }
+
+  // THIS ENTIRE BATCH OF FUNCTIONS ARE FOR BASIC MUSIC PLAYER CONTROLS
+  Future<void> loadTrack(String url) async {
+    final track = await client.tracks.getByUrl(url);
+    currentTitle = track.title;
+    currentAlbum = track.artworkUrl;
+    notifyListeners();
+    final streams = await client.tracks.getStreams(track.id);
+    // Use the first stream (or filter for mp3 if you want)
+    await player.setUrl(streams.first.url);
+    isInitialized = true;
+  }
+
+  Future<void> play() async {
+    if (!isInitialized) {
+      // Load a default track before playing
+      await loadTrack(songs[songNum]);
+    }
+    if (player.playing) {
+      await player.pause();
+    } else {
+      await player.play();
+    }
+  }
+
+  Future<void> next() async {
+    if (++songNum > songs.length - 1) {
+      songNum = 0;
+    }
+    player.stop();
+    isInitialized = false;
+    play();
+  }
+
+  Future<void> prev() async {
+    if (--songNum < 0) {
+      songNum = songs.length - 1;
+    }
+    player.stop();
+    isInitialized = false;
+    play();
+  }
+
+  String get currentAlbumUrl =>
+      currentAlbum?.toString() ??
+      'https://upload.wikimedia.org/wikipedia/commons/3/3c/No-album-art.png';
+
+  String get currentSongTitle => currentTitle;
+}
 
 class MyHomePage extends StatefulWidget {
   @override

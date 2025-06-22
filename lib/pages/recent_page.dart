@@ -1,87 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:musesync/main.dart';
+import 'package:provider/provider.dart';
 import 'package:soundcloud_explode_dart/soundcloud_explode_dart.dart';
 import 'package:just_audio/just_audio.dart';
 
 class RecentPage extends StatelessWidget {
-  final SoundcloudClient client = SoundcloudClient();
-  final AudioPlayer player = AudioPlayer();
-  final List<String> songs = [
-    'https://soundcloud.com/no-no-376380923/persona-3-reload-dont-by-azumi',
-    'https://soundcloud.com/tribaltrapmusic/tucadonka',
-    'https://soundcloud.com/ersona4ancingllight/dance',
-    'https://soundcloud.com/jamieirl/machine-love',
-    'https://soundcloud.com/duranduran/invisible',
-  ];
-  bool isInitialized = false;
-  int songNum = 0;
-
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final style = Theme.of(context).textTheme.displayMedium!.copyWith(
+      color: Theme.of(context).colorScheme.inverseSurface,
+      fontWeight: FontWeight.normal,
+      fontSize: 25.0,
+    );
+
     return Center(
-      child: Row(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ElevatedButton.icon(
-            onPressed: () {
-              prev(--songNum);
-            },
-            icon: Icon(Icons.skip_previous),
-            label: Text('Prev'),
+          Image.network(
+            appState.currentAlbumUrl,
+            scale: 0.4,
+            width: 250,
+            height: 250,
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              play(songNum);
-            },
-            icon: Icon(Icons.play_arrow),
-            label: Text('Play Song'),
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: SizedBox(
+              width: 400,
+              child: Text(
+                appState.currentSongTitle,
+                style: style,
+                textAlign: TextAlign.center,
+              ),
+            ),
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              next(++songNum);
-            },
-            icon: Icon(Icons.skip_next),
-            label: Text('Next'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: IconButton.filled(
+                  onPressed: () {
+                    appState.prev();
+                  },
+                  icon: Icon(Icons.skip_previous),
+                  color: Theme.of(context).colorScheme.onSecondary,
+                  iconSize: 30.0,
+                  padding: EdgeInsets.all(12.0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: IconButton.filled(
+                  onPressed: () {
+                    appState.play();
+                  },
+                  icon: Icon(
+                    appState.isPlaying ? Icons.pause : Icons.play_arrow,
+                  ),
+                  color: Theme.of(context).colorScheme.onInverseSurface,
+                  iconSize: 50.0,
+                  padding: EdgeInsets.all(12.0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: IconButton.filled(
+                  onPressed: () {
+                    appState.next();
+                  },
+                  icon: Icon(Icons.skip_next),
+                  color: Theme.of(context).colorScheme.onSecondary,
+                  iconSize: 30.0,
+                  padding: EdgeInsets.all(12.0),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
-  }
-
-  Future<void> loadTrack(String url) async {
-    final track = await client.tracks.getByUrl(url);
-    final streams = await client.tracks.getStreams(track.id);
-    // Use the first stream (or filter for mp3 if you want)
-    await player.setUrl(streams.first.url);
-    isInitialized = true;
-  }
-
-  Future<void> play(int num) async {
-    if (!isInitialized) {
-      // Load a default track before playing
-      await loadTrack(songs[num]);
-    }
-    if (player.playing) {
-      await player.pause();
-    } else {
-      await player.play();
-    }
-  }
-
-  Future<void> next(int songNum) async {
-    if (songNum > songs.length - 1) {
-      songNum = 0;
-    }
-    player.stop();
-    isInitialized = false;
-    play(songNum);
-  }
-
-  Future<void> prev(int songNum) async {
-    if (songNum < 0) {
-      songNum = songs.length - 1;
-    }
-    player.stop();
-    isInitialized = false;
-    play(songNum);
   }
 }
